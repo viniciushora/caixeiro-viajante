@@ -400,40 +400,74 @@ public void load(String graphFile) {
 		dVertices.get(u).cor = 2;
 	}
         
-        public void tsp(DirectedGraph<String, EdgeType> g, String s){
+        public void TSP(DirectedGraph<String, EdgeType> g, String s){
             HashMap<String, VData> dVertices = new HashMap<>();
-		for (String u : g.getVertices()) {
-                    VData vd = new VData();
-                    vd.cor = 0;
-                    vd.pred = null;
-                    dVertices.put(u, vd);
-		}
-                int nVisitas = 1;
-                List<String> rota = new ArrayList<>();
-                String vInicial = s;
-                float custo = 0;
-                List<String> menorRota = new ArrayList<>();
-                float menorCusto = this.inf;
-                visitaTSP(g, vInicial, dVertices, rota, menorRota, custo, nVisitas, menorCusto);
+            for (String u : g.getVertices()) {
+                VData vd = new VData();
+                vd.cor = 0;
+                vd.pred = null;
+                dVertices.put(u, vd);
+            }
+            int nVisitas = 1;
+            List<String> rota = new ArrayList<>();
+            String vInicial = s;
+            float custo = 0;
+            List<String> menorRota = new ArrayList<>();
+            float menorCusto = this.inf;
+            visitaTSP(g, vInicial, dVertices, rota, menorRota, custo, nVisitas, menorCusto);
+            
+            DirectedSparseMultigraph<String, EdgeType> gTSP = new DirectedSparseMultigraph<String, EdgeType>();
+            for (String u : g.getVertices()) {
+                gTSP.addVertex(u);
+            }
+            for (String u : g.getVertices()) {
+                String v = dVertices.get(u).pred;
+                EdgeType n = g.findEdge(v,u);
+                if (n != null) {
+                    EdgeType e = new EdgeType(this.wg.findEdge(v, u).weight,String.valueOf(gTSP.getEdgeCount()));
+                    gTSP.addEdge(e, v, u);
+                }
+            }
+            this.mostraGrafo2(gTSP);
         }
         
         public void visitaTSP(DirectedGraph<String, EdgeType> g, String u, Map<String, VData> dVertices,List<String> rota, List<String> menorRota, float custo, int nVisitas, float menorCusto) {
-                    VData vd = dVertices.get(u);
-                    vd.cor = 1;
-                    rota.add(u);
-                    for (String v : g.getNeighbors(u)) {
-			VData ud = dVertices.get(v);
-			if (ud.cor == 0) {
-                            custo = custo + this.wg.findEdge(v, u).weight;
-                            nVisitas ++;
-                            vd.pred = u;
-                            visitaTSP(g, u, dVertices, rota, menorRota, custo, nVisitas, menorCusto);
-			}
+            VData vd = dVertices.get(u);
+            vd.cor = 1;
+            rota.add(u);
+            for (String v : g.getNeighbors(u)) {
+                VData ud = dVertices.get(v);
+                if (ud.cor == 0) {
+                    nVisitas ++;
+                    EdgeType l = g.findEdge(u,v);
+                    if (l != null) {
+                        custo = custo + this.wg.findEdge(u,v).weight;
                     }
-                    if (nVisitas == ){
-                        
-                    }
-		dVertices.get(u).cor = 0;
+                    ud.pred = u;
+                    visitaTSP(g, v, dVertices, rota, menorRota, custo, nVisitas, menorCusto);
+                }
+            }
+            vd.cor = 0;
+            if (nVisitas == g.getVertexCount()){
+                EdgeType e = g.findEdge(u, rota.get(rota.size()-1));
+                if (e != null) {
+                    custo = custo + this.wg.findEdge(u, rota.get(rota.size()-1)).weight;
+                }
+                if (custo < menorCusto){
+                    menorCusto = custo;
+                    menorRota = rota;
+                }
+                if (e != null) {
+                    custo = custo + this.wg.findEdge(u, rota.get(rota.size()-1)).weight;
+                }
+            }
+            String k = dVertices.get(u).pred;
+            EdgeType n = g.findEdge(k,u);
+            if (n != null) {
+                custo = custo - this.wg.findEdge(k, u).weight;
+            }
+            rota.remove(u);
+            nVisitas = nVisitas - 1;
 	}
 
 	public static void testeBFS() {
@@ -442,6 +476,14 @@ public void load(String graphFile) {
 		g.mostraGrafo2(g.wg);
 		g.BFS(g.wg);
 	}
+        
+        public static void testeTSP() {
+		Grafo1 g = new Grafo1();
+		g.load("g2.txt");
+		g.mostraGrafo2(g.wg);
+		g.TSP(g.wg, "A");
+	}
+        
 	public static void testeMenorCaminho() {
 		Grafo1 g = new Grafo1();
 		g.load("g4.txt");
@@ -558,7 +600,8 @@ public void load(String graphFile) {
     
 	public static void main(String[] args) {
 		//testeBFS();
-		testeMenorCaminhoGAO();
+		//testeMenorCaminhoGAO();
+                testeTSP();
 	}
 
 
